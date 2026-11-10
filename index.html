@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Plan Suiza · Adrià y Lucia</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Layout: control bar → money comparison (salaries, cost of living, savings) → 12-month plan → sources */
+:root{
+  --bg:#f3f5f4; --surface:#ffffff; --ink:#15212b; --muted:#5f6d77; --line:#dde3e2;
+  --lake:#1b5f80; --lake-soft:#e3eef3; --red:#c8362f; --red-soft:#f8e6e4;
+  --good:#2e7d4f; --good-soft:#e2f2e8; --warn:#a86a00;
+  --display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body:"IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0f161c; --surface:#17212a; --ink:#e7eef2; --muted:#9aa9b3; --line:#2a3742;
+    --lake:#6cb4d6; --lake-soft:#1b3442; --red:#ef6b62; --red-soft:#3a2120;
+    --good:#5fc48a; --good-soft:#18332a; --warn:#e2a93b; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0f161c; --surface:#17212a; --ink:#e7eef2; --muted:#9aa9b3; --line:#2a3742;
+  --lake:#6cb4d6; --lake-soft:#1b3442; --red:#ef6b62; --red-soft:#3a2120;
+  --good:#5fc48a; --good-soft:#18332a; --warn:#e2a93b; color-scheme: dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.55 var(--body)}
+.wrap{max-width:1080px;margin:0 auto;padding:28px 20px 60px;display:grid;gap:28px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;line-height:1.15}
+h1{font-size:34px;letter-spacing:-.01em}
+h2{font-size:23px}
+h3{font-size:16px}
+p{margin:0}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+.num{font-variant-numeric:tabular-nums}
+header{display:grid;gap:8px}
+header .flag{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);font-weight:500}
+header .flag i{width:14px;height:14px;background:var(--red);border-radius:2px;position:relative;display:inline-block}
+header .flag i::before,header .flag i::after{content:"";position:absolute;background:#fff;left:50%;top:50%;transform:translate(-50%,-50%)}
+header .flag i::before{width:8px;height:2.5px}
+header .flag i::after{width:2.5px;height:8px}
+
+/* controls */
+.controls{position:sticky;top:0;z-index:5;background:var(--bg);padding:10px 0;border-bottom:1px solid var(--line);display:flex;flex-wrap:wrap;gap:14px 22px;align-items:flex-end}
+.ctl{display:grid;gap:4px}
+.ctl > span{font-size:12px;color:var(--muted);font-weight:500;text-transform:uppercase;letter-spacing:.04em}
+.seg{display:inline-flex;background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:3px;gap:2px;flex-wrap:wrap}
+.seg button{border:0;background:transparent;color:var(--ink);font:500 14px var(--body);padding:6px 11px;border-radius:7px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--lake);color:#fff}
+:root[data-theme="dark"] .seg button[aria-pressed="true"]{color:#0f161c}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .seg button[aria-pressed="true"]{color:#0f161c}}
+button:focus-visible,input:focus-visible{outline:2px solid var(--lake);outline-offset:2px}
+input[type="number"]{width:92px;font:500 14px var(--body);padding:6px 8px;border:1px solid var(--line);border-radius:7px;background:var(--surface);color:var(--ink)}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+.section{display:grid;gap:14px}
+.section > .head{display:grid;gap:4px}
+
+/* summary tiles */
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:grid;gap:2px}
+.tile .label{font-size:13px;color:var(--muted)}
+.tile .big{font:700 28px var(--display);font-variant-numeric:tabular-nums}
+.tile.accent{border-color:var(--lake);background:var(--lake-soft)}
+.pill{display:inline-block;font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px}
+.pill.up{background:var(--good-soft);color:var(--good)}
+.pill.ch{background:var(--red-soft);color:var(--red)}
+.pill.es{background:var(--lake-soft);color:var(--lake)}
+
+/* person salary cards */
+.person{display:grid;gap:12px}
+.person .top{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.side{border-radius:10px;padding:12px;display:grid;gap:6px}
+.side.es{background:var(--lake-soft)}
+.side.ch{background:var(--red-soft)}
+.side .h{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.side.es .h{color:var(--lake)}
+.side.ch .h{color:var(--red)}
+.side .net{font:700 22px var(--display);font-variant-numeric:tabular-nums}
+.side label{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13px;color:var(--muted)}
+.side input[type=range]{width:100%;accent-color:var(--lake)}
+.side.ch input[type=range]{accent-color:var(--red)}
+.mult{font-size:13px;color:var(--muted)}
+.note{font-size:13px;color:var(--muted);border-left:3px solid var(--line);padding-left:10px}
+.note.w{border-color:var(--warn)}
+
+/* costs table */
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th:first-child,td:first-child{text-align:left;white-space:normal}
+thead th{font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.03em}
+tfoot td{font-weight:700;border-bottom:0}
+td input[type=number]{width:84px;text-align:right}
+
+/* bars */
+.bars{display:grid;gap:14px}
+.bar-row{display:grid;grid-template-columns:120px 1fr;gap:12px;align-items:center}
+.bar-row .lbl{font-weight:600;font-size:14px}
+.bar{height:30px;background:var(--bg);border-radius:7px;overflow:hidden;display:flex;border:1px solid var(--line)}
+.bar span{height:100%;display:flex;align-items:center;padding:0 8px;font-size:12px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden}
+.bar .c{background:var(--muted)}
+.bar .s{background:var(--good)}
+.legend{display:flex;gap:16px;font-size:13px;color:var(--muted)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+
+/* plan */
+.plan-tools{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
+.progress{display:flex;gap:16px;flex-wrap:wrap}
+.prog{display:grid;gap:4px;min-width:150px}
+.prog .t{font-size:13px;color:var(--muted);display:flex;justify-content:space-between}
+.prog .b{height:6px;border-radius:9px;background:var(--line);overflow:hidden}
+.prog .b span{display:block;height:100%;background:var(--lake)}
+.quarters{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.q{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;display:grid;gap:10px;align-content:start}
+.q .qh{display:grid;gap:2px;border-bottom:1px solid var(--line);padding-bottom:8px}
+.q .qh .k{font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.task{display:grid;grid-template-columns:20px 1fr;gap:8px;align-items:start;font-size:14px}
+.task input{margin-top:3px;width:16px;height:16px;accent-color:var(--good)}
+.task.done .txt{color:var(--muted);text-decoration:line-through}
+.who{font-size:11px;font-weight:700;padding:1px 6px;border-radius:5px;margin-right:6px;vertical-align:1px}
+.who.A{background:var(--lake-soft);color:var(--lake)}
+.who.L{background:var(--red-soft);color:var(--red)}
+.who.B{background:var(--good-soft);color:var(--good)}
+.route{display:grid;gap:10px}
+.steps{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:14px}
+.steps .st{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:6px 10px}
+.steps .ar{color:var(--muted)}
+.cmp-path{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.cmp-path .card{padding:14px}
+.cmp-path ul{margin:6px 0 0;padding-left:18px;font-size:14px}
+.sources{font-size:13px;color:var(--muted);display:grid;gap:4px}
+.sources a{color:var(--lake)}
+footer.send{display:flex;gap:12px;align-items:center;flex-wrap:wrap;background:var(--lake-soft);border-radius:12px;padding:14px 16px;font-size:14px}
+@media (max-width:520px){
+  h1{font-size:27px}
+  .cmp{grid-template-columns:1fr}
+  .bar-row{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion: no-preference){
+  .bar span,.prog .b span{transition:width .35s ease}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <span class="flag"><i aria-hidden="true"></i>Suiza francesa · mudanza objetivo primavera 2028</span>
+  <h1>Plan Suiza · Adrià y Lucia</h1>
+  <p class="muted">Sueldos, coste de vida y plan de preparación de 12 meses. Todos los importes son estimaciones brutas de mercado convertidas a neto con un cálculo aproximado de impuestos: mueve los controles para ajustarlos a vuestro caso.</p>
+</header>
+
+<div class="controls" role="group" aria-label="Opciones">
+  <div class="ctl"><span>Ciudad</span>
+    <div class="seg" id="city">
+      <button type="button" data-v="lau" aria-pressed="true">Lausana</button>
+      <button type="button" data-v="ge" aria-pressed="false">Ginebra</button>
+    </div>
+  </div>
+  <div class="ctl"><span>Trabajo de Lucia</span>
+    <div class="seg" id="lmode">
+      <button type="button" data-v="an1" aria-pressed="true">Anestesia · años 1–2</button>
+      <button type="button" data-v="an2" aria-pressed="false">Anestesia · titulada</button>
+      <button type="button" data-v="est" aria-pressed="false">Enfermera de estética</button>
+    </div>
+  </div>
+  <div class="ctl"><span>1 CHF =</span>
+    <label class="small"><input type="number" id="fx" value="1.07" step="0.01" min="0.8" max="1.3"> €</label>
+  </div>
+</div>
+
+<!-- SUMMARY -->
+<section class="section" aria-labelledby="h-sum">
+  <div class="head"><h2 id="h-sum">Resumen al mes, en pareja</h2>
+    <p class="muted small" id="sumNote"></p></div>
+  <div class="tiles">
+    <div class="tile"><span class="label">Neto de los dos · España</span><span class="big num" id="tNetES"></span><span class="small muted">Barcelona</span></div>
+    <div class="tile"><span class="label">Neto de los dos · Suiza</span><span class="big num" id="tNetCH"></span><span class="small muted" id="tNetCHsub"></span></div>
+    <div class="tile"><span class="label">Os queda tras gastos · España</span><span class="big num" id="tSaveES"></span><span class="small muted" id="tSaveESsub"></span></div>
+    <div class="tile accent"><span class="label">Os queda tras gastos · Suiza</span><span class="big num" id="tSaveCH"></span><span class="small" id="tSaveCHsub"></span></div>
+  </div>
+</section>
+
+<!-- SALARIES -->
+<section class="section" aria-labelledby="h-sal">
+  <div class="head"><h2 id="h-sal">Sueldos: España frente a Suiza</h2>
+    <p class="muted small">Bruto anual a jornada completa. El neto mensual descuenta Seguridad Social e IRPF (España) o cotizaciones e impuesto en origen (Suiza), repartido en 12 meses.</p></div>
+  <div class="grid2">
+    <article class="card person" id="pA">
+      <div class="top"><h3>Adrià · Data analyst / BI</h3><span class="pill up" id="multA"></span></div>
+      <div class="cmp">
+        <div class="side es">
+          <span class="h">España</span>
+          <span class="net num" id="netEsA"></span>
+          <label for="esA">Bruto anual <b class="num" id="esAv"></b></label>
+          <input type="range" id="esA" min="25000" max="70000" step="1000" value="40000">
+        </div>
+        <div class="side ch">
+          <span class="h">Suiza</span>
+          <span class="net num" id="netChA"></span>
+          <label for="chA">Bruto anual <b class="num" id="chAv"></b></label>
+          <input type="range" id="chA" min="60000" max="140000" step="1000" value="92000">
+        </div>
+      </div>
+      <p class="note" id="noteA"></p>
+    </article>
+    <article class="card person" id="pL">
+      <div class="top"><h3 id="titleL"></h3><span class="pill up" id="multL"></span></div>
+      <div class="cmp">
+        <div class="side es">
+          <span class="h">España</span>
+          <span class="net num" id="netEsL"></span>
+          <label for="esL">Bruto anual <b class="num" id="esLv"></b></label>
+          <input type="range" id="esL" min="22000" max="50000" step="500" value="31000">
+        </div>
+        <div class="side ch">
+          <span class="h">Suiza</span>
+          <span class="net num" id="netChL"></span>
+          <label for="chL">Bruto anual <b class="num" id="chLv"></b></label>
+          <input type="range" id="chL" min="50000" max="125000" step="1000" value="78000">
+        </div>
+      </div>
+      <p class="note" id="noteL"></p>
+    </article>
+  </div>
+</section>
+
+<!-- COSTS -->
+<section class="section" aria-labelledby="h-cost">
+  <div class="head"><h2 id="h-cost">Coste de vida al mes, en pareja</h2>
+    <p class="muted small">Cada importe se puede editar. Suiza en francos; la última columna lo pasa a euros.</p></div>
+  <div class="card tbl-wrap">
+    <table>
+      <thead><tr><th>Gasto</th><th>Barcelona (€)</th><th id="thCity">Lausana (CHF)</th><th>Suiza en €</th><th>Diferencia</th></tr></thead>
+      <tbody id="costBody"></tbody>
+      <tfoot><tr><td>Total</td><td id="totES"></td><td id="totCH"></td><td id="totCHe"></td><td id="totDiff"></td></tr></tfoot>
+    </table>
+  </div>
+  <div class="card bars">
+    <h3>Qué parte del sueldo se va en vivir</h3>
+    <div class="legend"><span><i style="background:var(--muted)"></i>Gastos</span><span><i style="background:var(--good)"></i>Ahorro</span></div>
+    <div id="barsBox" class="bars"></div>
+    <p class="note" id="perPerson"></p>
+  </div>
+</section>
+
+<!-- LUCIA PATH -->
+<section class="section" aria-labelledby="h-path">
+  <div class="head"><h2 id="h-path">Ruta de Lucia</h2>
+    <p class="muted small">Cambia con el botón «Trabajo de Lucia» de arriba.</p></div>
+  <div class="card route" id="routeBox"></div>
+  <div class="cmp-path">
+    <div class="card"><h3>Anestesia</h3><ul>
+      <li>Techo más alto: unos 90–110k CHF con el título suizo.</li>
+      <li>Hace falta el posgrado EPD ES (2 años, cobrando). Su máster de la UPF puede convalidar una parte.</li>
+      <li>Mucha demanda en hospitales y clínicas; casi siempre a jornada completa.</li>
+    </ul></div>
+    <div class="card"><h3>Estética</h3><ul>
+      <li>Entrada más rápida: basta el reconocimiento como enfermera, sin posgrado.</li>
+      <li>Menos ofertas, muchas a tiempo parcial (50–80 %) y sueldo menos estandarizado.</li>
+      <li>Clínicas de lujo en Ginebra piden francés e inglés altos (alguna, C1 en ambos) y experiencia en quirófano de cirugía estética.</li>
+    </ul></div>
+  </div>
+</section>
+
+<!-- PLAN -->
+<section class="section" aria-labelledby="h-plan">
+  <div class="head"><h2 id="h-plan">Plan de 12 meses · dic 2026 – nov 2027</h2>
+    <p class="muted small">Marca las tareas hechas: se guardan en este navegador.</p></div>
+  <div class="plan-tools">
+    <div class="seg" id="who">
+      <button type="button" data-v="all" aria-pressed="true">Todo</button>
+      <button type="button" data-v="A" aria-pressed="false">Adrià</button>
+      <button type="button" data-v="L" aria-pressed="false">Lucia</button>
+      <button type="button" data-v="B" aria-pressed="false">Juntos</button>
+    </div>
+    <div class="progress" id="progBox"></div>
+  </div>
+  <div class="quarters" id="qBox"></div>
+</section>
+
+<footer class="send">
+  <span>¿Os gusta? Escribe <b>«envíalo»</b> en el chat y lo mando a grauadria2@gmail.com y luciarafele@gmail.com.</span>
+</footer>
+
+<section class="sources" aria-labelledby="h-src">
+  <h3 id="h-src">Fuentes y supuestos</h3>
+  <p>Sueldos Suiza: <a href="https://www.chuv.ch/fr/carriere/accueil/faq/faq-par-categories/salaire">CHUV</a>, <a href="https://upreer.ch/fr/salaires/infirmier/geneve/">upreer (HUG)</a>, <a href="https://to.indeed.com/aavfrsjsw2bt">oferta anestesia BaJAC 100–110k</a>, <a href="https://jobrise.io/fr/blog/emplois-data-analyst-geneve-2026-guide/">jobrise (data analyst Ginebra)</a>, <a href="https://upreer.ch/fr/salaires/data-scientist/lausanne/">upreer (Lausana 7–10 % por debajo de Ginebra)</a>.</p>
+  <p>Sueldos España: <a href="https://jobrise.io/es/blog/salario-data-analyst-barcelona-2026/">jobrise (data analyst BCN)</a>, <a href="https://www.infojobs.net/barcelona/enfermero-cirugia-estetica/of-i0a8b2fbf484d4fa979b48c529048fb">InfoJobs (enfermera cirugía estética 33–39k)</a>, <a href="https://cienciassaludceuta.ugr.es/print/pdf/node/1927">oferta quirúrgica privada BCN 30k</a>, <a href="https://www.infojobs.net/barcelona/enfermero-especialista-obstetrico-ginecologica-matrona/of-ia0ef74487442b4b3bcfe3be651cdd8">SCIAS 32–33k</a>.</p>
+  <p>Coste de vida: <a href="https://www.immobilier.ch/fr/louer/appartement/vaud/lausanne/">anuncios 3 pièces Lausana (1.300–2.960 CHF + gastos)</a>, <a href="https://www.openshores.co/blog/suisse/lausanne/cout-de-la-vie-a-lausanne">presupuesto pareja Lausana</a>, <a href="https://compassurance.ch/primes-lamal-2027-previsions-hausse/">primas LAMal</a>, <a href="https://cuantomecuesta.com/es/alquilar-barcelona/">alquiler Barcelona</a>.</p>
+  <p>El sueldo de enfermera de estética en Suiza es una estimación propia: no he encontrado datos publicados. Los impuestos suizos dependen del cantón, el estado civil y la comuna; el cálculo usa tipos efectivos aproximados de persona soltera.</p>
+</section>
+
+</div>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  const st = { city:"lau", lmode:"an1", fx:1.07, who:"all", chAtouched:false };
+
+  const LMODES = {
+    an1:{ title:"Lucia · Enfermera (anestesia, años 1–2)", es:31000, ch:{lau:76000, ge:79000},
+      note:"Entra como enfermera en anestesia, quirófano o reanimación mientras hace el posgrado EPD ES (2 años, con contrato). En España no cambia: ya trabaja de enfermera de anestesia." },
+    an2:{ title:"Lucia · Enfermera de anestesia titulada", es:31000, ch:{lau:98000, ge:103000},
+      note:"Con el título suizo EPD ES. Referencia: una oferta en Vaud paga 100–110k CHF a enfermeras anestesistas con el título francés." },
+    est:{ title:"Lucia · Enfermera de estética", es:34000, ch:{lau:72000, ge:78000},
+      note:"Estimación: no hay datos publicados de sueldo. Muchas plazas son al 50–80 %; ajusta el bruto si es a tiempo parcial. En España, una oferta de cirugía estética en Barcelona paga 33–39k." }
+  };
+  const ADRIA_CH = { lau:92000, ge:100000 };
+
+  // Spain: SS 6.47 % (capped) + IRPF state + Catalonia, single, no kids
+  function irpfScale(b, br){ let t=0, prev=0; for(const [lim,r] of br){ if(b<=prev) break; t += (Math.min(b,lim)-prev)*r; prev=lim; } return t; }
+  const ST=[[12450,.095],[20200,.12],[35200,.15],[60000,.185],[300000,.225],[1e12,.245]];
+  const CAT=[[12450,.105],[17707,.12],[21000,.14],[33007,.15],[53407,.188],[90000,.215],[120000,.235],[175000,.245],[1e12,.255]];
+  function netES(g){
+    const ss = Math.min(g, 61214)*0.0647;
+    const base = Math.max(0, g - ss - 2000);
+    const tax = Math.max(0, irpfScale(base,ST)-irpfScale(5550,ST)) + Math.max(0, irpfScale(base,CAT)-irpfScale(5550,CAT));
+    return (g - ss - tax)/12;
+  }
+  // Switzerland: AVS/AI/APG 5.3 %, AC 1.1 %, AANP+IJM ~1.7 %, LPP ~3.5 % of coordinated salary, tax at source approx.
+  const TAXPTS=[[40000,.04],[60000,.075],[80000,.10],[100000,.12],[120000,.14],[150000,.16]];
+  function taxRate(g, city){
+    let r;
+    if(g<=TAXPTS[0][0]) r=TAXPTS[0][1];
+    else if(g>=TAXPTS[TAXPTS.length-1][0]) r=TAXPTS[TAXPTS.length-1][1];
+    else for(let i=1;i<TAXPTS.length;i++){ const [x1,y1]=TAXPTS[i-1],[x2,y2]=TAXPTS[i]; if(g<=x2){ r=y1+(y2-y1)*(g-x1)/(x2-x1); break; } }
+    return city==="ge" ? r*0.95 : r;
+  }
+  function netCH(g, city){
+    const social = g*(0.053+0.011+0.017) + Math.max(0,g-26460)*0.035;
+    return (g - social - g*taxRate(g,city))/12;
+  }
+
+  const COSTS = [
+    {k:"Alquiler piso 2 hab. + gastos comunidad", es:1600, ch:{lau:2250, ge:2650}},
+    {k:"Seguro médico (LAMal ×2; en España, pública)", es:0, ch:{lau:900, ge:1000}},
+    {k:"Luz, agua, internet, móviles", es:200, ch:{lau:230, ge:230}},
+    {k:"Supermercado", es:550, ch:{lau:1000, ge:1050}},
+    {k:"Transporte público (×2)", es:60, ch:{lau:180, ge:140}},
+    {k:"Ocio y restaurantes", es:400, ch:{lau:600, ge:650}},
+    {k:"Otros (ropa, gimnasio, imprevistos)", es:250, ch:{lau:300, ge:300}}
+  ];
+  const costVals = COSTS.map(c=>({es:c.es, ch:{...c.ch}}));
+
+  const eur = v => Math.round(v).toLocaleString("es-ES")+" €";
+  const chf = v => Math.round(v).toLocaleString("es-ES")+" CHF";
+  const k = v => Math.round(v/1000)+"k";
+
+  function seg(id, key, cb){
+    $(id).addEventListener("click", e=>{
+      const b=e.target.closest("button"); if(!b) return;
+      st[key]=b.dataset.v;
+      $(id).querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed", x===b?"true":"false"));
+      cb && cb(); render();
+    });
+  }
+  seg("city","city",()=>{
+    if(!st.chAtouched) $("chA").value = ADRIA_CH[st.city];
+    $("chL").value = LMODES[st.lmode].ch[st.city];
+  });
+  seg("lmode","lmode",()=>{
+    $("esL").value = LMODES[st.lmode].es;
+    $("chL").value = LMODES[st.lmode].ch[st.city];
+  });
+  seg("who","who");
+  $("fx").addEventListener("input",()=>{ const v=parseFloat($("fx").value); if(v>0) { st.fx=v; render(); } });
+  ["esA","chA","esL","chL"].forEach(id=>$(id).addEventListener("input",()=>{ if(id==="chA") st.chAtouched=true; render(); }));
+
+  function buildCosts(){
+    $("costBody").innerHTML = COSTS.map((c,i)=>`<tr>
+      <td>${c.k}</td>
+      <td><input type="number" id="ces${i}" aria-label="${c.k} Barcelona" value="${costVals[i].es}" min="0" step="10"></td>
+      <td><input type="number" id="cch${i}" aria-label="${c.k} Suiza" value="${costVals[i].ch[st.city]}" min="0" step="10"></td>
+      <td id="cche${i}"></td><td id="cdif${i}"></td></tr>`).join("");
+    COSTS.forEach((c,i)=>{
+      $("ces"+i).addEventListener("input",e=>{ costVals[i].es=+e.target.value||0; render(true); });
+      $("cch"+i).addEventListener("input",e=>{ costVals[i].ch[st.city]=+e.target.value||0; render(true); });
+    });
+  }
+  let builtCity=null;
+
+  function render(fromCost){
+    const fx=st.fx, city=st.city, L=LMODES[st.lmode];
+    const cityName = city==="ge"?"Ginebra":"Lausana";
+    if(builtCity!==city && !fromCost){ buildCosts(); builtCity=city; }
+    $("thCity").textContent = cityName+" (CHF)";
+
+    const esA=+$("esA").value, chA=+$("chA").value, esL=+$("esL").value, chL=+$("chL").value;
+    $("esAv").textContent=eur(esA); $("chAv").textContent=chf(chA);
+    $("esLv").textContent=eur(esL); $("chLv").textContent=chf(chL);
+    $("titleL").textContent=L.title;
+
+    const nEA=netES(esA), nCA=netCH(chA,city), nEL=netES(esL), nCL=netCH(chL,city);
+    $("netEsA").innerHTML=eur(nEA)+'<span class="small muted"> /mes</span>';
+    $("netChA").innerHTML=eur(nCA*fx)+'<span class="small muted"> /mes · '+chf(nCA)+'</span>';
+    $("netEsL").innerHTML=eur(nEL)+'<span class="small muted"> /mes</span>';
+    $("netChL").innerHTML=eur(nCL*fx)+'<span class="small muted"> /mes · '+chf(nCL)+'</span>';
+    $("multA").textContent="×"+(nCA*fx/nEA).toFixed(1)+" en neto";
+    $("multL").textContent="×"+(nCL*fx/nEL).toFixed(1)+" en neto";
+    $("noteA").textContent = "Mercado: Barcelona 35–50k con 2–5 años de experiencia (ajusta el de España a tu sueldo real). Ginebra 90–115k con 3–5 años; Lausana suele pagar un 7–10 % menos.";
+    $("noteL").textContent = L.note;
+    $("noteL").className = "note"+(st.lmode==="est"?" w":"");
+
+    // costs
+    let tES=0,tCH=0;
+    COSTS.forEach((c,i)=>{
+      const e=costVals[i].es, h=costVals[i].ch[city];
+      if(fromCost!==true){ $("ces"+i).value=e; $("cch"+i).value=h; }
+      tES+=e; tCH+=h;
+      $("cche"+i).textContent=eur(h*fx);
+      const d=h*fx-e; $("cdif"+i).textContent=(d>=0?"+":"")+eur(d);
+    });
+    $("totES").textContent=eur(tES); $("totCH").textContent=chf(tCH); $("totCHe").textContent=eur(tCH*fx);
+    $("totDiff").textContent=(e=>(e>=0?"+":"")+eur(e))(tCH*fx-tES)+" ("+(tES?("×"+(tCH*fx/tES).toFixed(1)):"")+")";
+
+    const netES2=nEA+nEL, netCH2=(nCA+nCL)*fx, costCHe=tCH*fx;
+    const saveES=netES2-tES, saveCH=netCH2-costCHe;
+    $("tNetES").textContent=eur(netES2);
+    $("tNetCH").textContent=eur(netCH2);
+    $("tNetCHsub").textContent=cityName+" · "+chf(nCA+nCL);
+    $("tSaveES").textContent=eur(saveES);
+    $("tSaveESsub").textContent=eur(saveES*12)+" al año";
+    $("tSaveCH").textContent=eur(saveCH);
+    const diff=saveCH-saveES;
+    $("tSaveCHsub").innerHTML='<span class="pill '+(diff>=0?"up":"ch")+'">'+(diff>=0?"+":"")+eur(diff)+' /mes vs España</span> · '+eur(saveCH*12)+' al año';
+    $("sumNote").textContent="Con "+L.title.replace("Lucia · ","Lucia como ").toLowerCase().replace("lucia","Lucia")+" y Adrià como data analyst, viviendo en "+cityName+".";
+
+    // bars
+    const rows=[["España",netES2,tES],["Suiza · "+cityName,netCH2,costCHe]];
+    $("barsBox").innerHTML=rows.map(([n,net,c])=>{
+      const cp=Math.min(100,c/net*100), sp=Math.max(0,100-cp);
+      return `<div class="bar-row"><span class="lbl">${n}</span><div class="bar" role="img" aria-label="${n}: gastos ${Math.round(cp)} %, ahorro ${Math.round(sp)} %">
+        <span class="c" style="width:${cp}%">${Math.round(cp)} % · ${eur(c)}</span><span class="s" style="width:${sp}%">${sp>12?Math.round(sp)+" % · "+eur(net-c):""}</span></div></div>`;
+    }).join("");
+    const half=costCHe/2, halfES=tES/2;
+    $("perPerson").textContent = `Pagando gastos a medias: en España a Adrià le quedan ${eur(nEA-halfES)} y a Lucia ${eur(nEL-halfES)} al mes; en ${cityName}, ${eur(nCA*fx-half)} y ${eur(nCL*fx-half)}.`;
+
+    renderRoute(); renderPlan();
+  }
+
+  function renderRoute(){
+    const r = st.lmode==="est"
+      ? {steps:["DELF B2 → apuntar a C1","Reconocimiento CRS como enfermera","Experiencia en medicina estética en BCN","Clínicas estéticas Ginebra / Lausana"],
+         txt:"No necesita posgrado suizo: con el título de enfermera reconocido puede trabajar en clínicas de medicina y cirugía estética. Su máster de estética (NUS) y la experiencia en quirófano suman. El reto es el idioma y que hay menos plazas, varias a tiempo parcial."}
+      : {steps:["DELF B2","Reconocimiento CRS como enfermera","Trabajo en anestesia / quirófano en Suiza","Posgrado EPD ES «sur dossier» (cobrando)","Enfermera de anestesia titulada"],
+         txt:"Plan con más recorrido: el máster de anestesia de la UPF y casi 3 años de experiencia son lo que más pesa para convalidar parte del posgrado. El CHUV pide 1 año trabajado en Suiza antes de entrar."};
+    $("routeBox").innerHTML = `<div class="steps">${r.steps.map((s,i)=>(i?'<span class="ar" aria-hidden="true">→</span>':'')+`<span class="st">${s}</span>`).join("")}</div><p>${r.txt}</p>`;
+  }
+
+  // PLAN
+  const PLAN = [
+    {q:"Trimestre 1", d:"dic 2026 – feb 2027", t:"Base", tasks:[
+      ["B","Clases de francés (Institut français o Alliance Française BCN) y 20–30 min diarios juntos"],
+      ["B","Una cena a la semana solo en francés; series y podcasts en francés"],
+      ["B","Empezar el colchón de mudanza: fianza (unos 3 meses de alquiler) + 2–3 meses de gastos"],
+      ["L","Francés B1 → B2: clases orientadas al DELF B2"],
+      ["L","CV: Quirón Salud primero, fechas completas, prácticas separadas", {an:"Quitar el máster de estética o dejarlo al final", est:"Destacar el máster de estética y la experiencia en quirófano"}],
+      ["L","Pedir certificados de empresa (Corachán, Anestalia, Quirón) con funciones detalladas"],
+      ["L",{an:"Pedir a la UPF el programa del máster con ECTS y horas", est:"Terminar el máster de estética (NUS) y guardar el programa"}],
+      ["A","Francés A1 → A2"],
+      ["A","Aprobar el PL-300"],
+      ["A","CV y LinkedIn en inglés con logros cuantificados"],
+      ["A","Lista de 30–40 empresas objetivo en Ginebra y Vaud"]
+    ]},
+    {q:"Trimestre 2", d:"mar – may 2027", t:"Formación", tasks:[
+      ["L","Inscribirse al DELF B2 (confirmar convocatorias)"],
+      ["L","Pedir información a la Cruz Roja Suiza (CRS) sobre el reconocimiento del grado"],
+      ["L",{an:"Mantener el ritmo en anestesia (quirófano, UCMA, reanimación)", est:"Conseguir experiencia en medicina estética en BCN (fines de semana o tiempo parcial)"}],
+      ["A","Francés A2 → B1"],
+      ["A","Empezar la certificación de analytics engineer (p. ej. dbt)"],
+      ["A","Proyecto de portfolio en inglés: SQL + dbt + Power BI"],
+      ["B","Escapada a Lausana y Ginebra: barrios, alquileres, transporte"]
+    ]},
+    {q:"Trimestre 3", d:"jun – ago 2027", t:"Papeles y contactos", tasks:[
+      ["L","Examen DELF B2 → enviar la solicitud a la CRS"],
+      ["L","CV en francés, formato suizo"],
+      ["L",{an:"Escribir al CHUV y a los HUG para pedir valoración «sur dossier» del EPD ES", est:"Si el B2 sale bien, seguir hacia C1 (clínicas de lujo lo piden)"}],
+      ["A","Certificación de analytics engineer terminada"],
+      ["A","CV en francés; alertas en jobup.ch, jobs.ch e Indeed Suiza"],
+      ["A","Contactar reclutadores suizos de datos en LinkedIn"],
+      ["B","Opcional: curso intensivo de francés de verano en la zona del Lemán"]
+    ]},
+    {q:"Trimestre 4", d:"sep – nov 2027", t:"Candidaturas", tasks:[
+      ["L",{an:"Candidaturas en anestesia / quirófano: Hirslanden (Bois-Cerf, Cecil, Grangettes), La Source, Genolier, CHUV, HUG", est:"Candidaturas en clínicas estéticas de Ginebra y Lausana (y quirófano de cirugía estética)"}],
+      ["L","Renovar BLS / SVA (lo piden con menos de 1 año)"],
+      ["A","Candidaturas constantes; objetivo: entrevistas antes de fin de año"],
+      ["A","Francés B1 consolidado"],
+      ["B","Elegir ciudad y preparar la llegada: permiso B, empadronarse en la comuna, cuenta suiza, LAMal (3 meses de plazo)"]
+    ]}
+  ];
+  let done={};
+  try{ done=JSON.parse(localStorage.getItem("planSuizaDone")||"{}"); }catch(e){ done={}; }
+  const pick = (x)=> typeof x==="string" ? x : (st.lmode==="est" ? x.est : x.an);
+
+  function renderPlan(){
+    const counts={A:[0,0],L:[0,0],B:[0,0]};
+    $("qBox").innerHTML = PLAN.map((Q,qi)=>{
+      const items = Q.tasks.map((t,ti)=>{
+        const id=`${qi}-${ti}-${st.lmode==="est"&&typeof t[1]!=="string"?"e":"a"}`;
+        const who=t[0]; let txt=pick(t[1]); if(t[2]) txt+=". "+pick(t[2]);
+        const isDone=!!done[id]; counts[who][1]++; if(isDone) counts[who][0]++;
+        if(st.who!=="all" && st.who!==who) return "";
+        const tag={A:"Adrià",L:"Lucia",B:"Juntos"}[who];
+        return `<label class="task${isDone?" done":""}"><input type="checkbox" data-id="${id}" ${isDone?"checked":""}><span class="txt"><span class="who ${who}">${tag}</span>${txt}</span></label>`;
+      }).join("");
+      return `<div class="q"><div class="qh"><span class="k">${Q.q} · ${Q.d}</span><h3>${Q.t}</h3></div>${items}</div>`;
+    }).join("");
+    $("progBox").innerHTML = [["A","Adrià"],["L","Lucia"],["B","Juntos"]].map(([k2,n])=>{
+      const [d,t]=counts[k2]; const p=t?d/t*100:0;
+      return `<div class="prog"><span class="t"><span>${n}</span><span class="num">${d}/${t}</span></span><span class="b"><span style="width:${p}%"></span></span></div>`;
+    }).join("");
+    $("qBox").querySelectorAll("input[type=checkbox]").forEach(cb=>cb.addEventListener("change",e=>{
+      done[e.target.dataset.id]=e.target.checked;
+      try{ localStorage.setItem("planSuizaDone", JSON.stringify(done)); }catch(err){}
+      renderPlan();
+    }));
+  }
+
+  render();
+})();
+</script>
+</body>
+</html>
