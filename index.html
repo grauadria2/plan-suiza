@@ -175,6 +175,12 @@ footer.send{display:flex;gap:12px;align-items:center;flex-wrap:wrap;background:v
       <button type="button" data-v="est" aria-pressed="false">Enfermera de estética</button>
     </div>
   </div>
+  <div class="ctl"><span>Piso</span>
+    <div class="seg" id="rooms">
+      <button type="button" data-v="1" aria-pressed="true">1 habitación</button>
+      <button type="button" data-v="2" aria-pressed="false">2 habitaciones</button>
+    </div>
+  </div>
   <div class="ctl"><span>1 CHF =</span>
     <label class="small"><input type="number" id="fx" value="1.07" step="0.01" min="0.8" max="1.3"> €</label>
   </div>
@@ -239,7 +245,7 @@ footer.send{display:flex;gap:12px;align-items:center;flex-wrap:wrap;background:v
 <!-- COSTS -->
 <section class="section" aria-labelledby="h-cost">
   <div class="head"><h2 id="h-cost">Coste de vida al mes, en pareja</h2>
-    <p class="muted small">Cada importe se puede editar. Suiza en francos; la última columna lo pasa a euros.</p></div>
+    <p class="muted small">Es el gasto total de los dos viviendo juntos: un solo alquiler, compartido. Lo que va por persona (seguro médico, transporte) ya está multiplicado por dos. En Suiza, un piso de 1 habitación se anuncia como «2 pièces» (dormitorio + salón). Cada importe se puede editar.</p></div>
   <div class="card tbl-wrap">
     <table>
       <thead><tr><th>Gasto</th><th>Barcelona (€)</th><th id="thCity">Lausana (CHF)</th><th>Suiza en €</th><th>Diferencia</th></tr></thead>
@@ -298,7 +304,7 @@ footer.send{display:flex;gap:12px;align-items:center;flex-wrap:wrap;background:v
   <h3 id="h-src">Fuentes y supuestos</h3>
   <p>Sueldos Suiza: <a href="https://www.chuv.ch/fr/carriere/accueil/faq/faq-par-categories/salaire">CHUV</a>, <a href="https://upreer.ch/fr/salaires/infirmier/geneve/">upreer (HUG)</a>, <a href="https://to.indeed.com/aavfrsjsw2bt">oferta anestesia BaJAC 100–110k</a>, <a href="https://jobrise.io/fr/blog/emplois-data-analyst-geneve-2026-guide/">jobrise (data analyst Ginebra)</a>, <a href="https://upreer.ch/fr/salaires/data-scientist/lausanne/">upreer (Lausana 7–10 % por debajo de Ginebra)</a>.</p>
   <p>Sueldos España: <a href="https://jobrise.io/es/blog/salario-data-analyst-barcelona-2026/">jobrise (data analyst BCN)</a>, <a href="https://www.infojobs.net/barcelona/enfermero-cirugia-estetica/of-i0a8b2fbf484d4fa979b48c529048fb">InfoJobs (enfermera cirugía estética 33–39k)</a>, <a href="https://cienciassaludceuta.ugr.es/print/pdf/node/1927">oferta quirúrgica privada BCN 30k</a>, <a href="https://www.infojobs.net/barcelona/enfermero-especialista-obstetrico-ginecologica-matrona/of-ia0ef74487442b4b3bcfe3be651cdd8">SCIAS 32–33k</a>.</p>
-  <p>Coste de vida: <a href="https://www.immobilier.ch/fr/louer/appartement/vaud/lausanne/">anuncios 3 pièces Lausana (1.300–2.960 CHF + gastos)</a>, <a href="https://www.openshores.co/blog/suisse/lausanne/cout-de-la-vie-a-lausanne">presupuesto pareja Lausana</a>, <a href="https://compassurance.ch/primes-lamal-2027-previsions-hausse/">primas LAMal</a>, <a href="https://cuantomecuesta.com/es/alquilar-barcelona/">alquiler Barcelona</a>.</p>
+  <p>Coste de vida: <a href="https://www.immobilier.ch/fr/louer/appartement/vaud/lausanne/">anuncios en Lausana: 2 pièces 1.040–1.850 CHF y 3 pièces 1.310–2.960 CHF, más gastos</a>, <a href="https://www.openshores.co/blog/suisse/lausanne/cout-de-la-vie-a-lausanne">presupuesto pareja Lausana</a>, <a href="https://compassurance.ch/primes-lamal-2027-previsions-hausse/">primas LAMal</a>, <a href="https://cuantomecuesta.com/es/alquilar-barcelona/">alquiler Barcelona</a>.</p>
   <p>El sueldo de enfermera de estética en Suiza es una estimación propia: no he encontrado datos publicados. Los impuestos suizos dependen del cantón, el estado civil y la comuna; el cálculo usa tipos efectivos aproximados de persona soltera.</p>
 </section>
 
@@ -307,7 +313,9 @@ footer.send{display:flex;gap:12px;align-items:center;flex-wrap:wrap;background:v
 <script>
 (function(){
   const $ = id => document.getElementById(id);
-  const st = { city:"lau", lmode:"an1", fx:1.07, who:"all", chAtouched:false };
+  const st = { city:"lau", lmode:"an1", fx:1.07, who:"all", chAtouched:false, rooms:"1" };
+  const RENT = { "1":{k:"Alquiler piso 1 hab. (2 pièces) + gastos", es:1350, ch:{lau:1650, ge:1950}},
+                 "2":{k:"Alquiler piso 2 hab. (3 pièces) + gastos", es:1600, ch:{lau:2250, ge:2650}} };
 
   const LMODES = {
     an1:{ title:"Lucia · Enfermera (anestesia, años 1–2)", es:31000, ch:{lau:76000, ge:79000},
@@ -344,7 +352,7 @@ footer.send{display:flex;gap:12px;align-items:center;flex-wrap:wrap;background:v
   }
 
   const COSTS = [
-    {k:"Alquiler piso 2 hab. + gastos comunidad", es:1600, ch:{lau:2250, ge:2650}},
+    {k:RENT["1"].k, es:RENT["1"].es, ch:{...RENT["1"].ch}},
     {k:"Seguro médico (LAMal ×2; en España, pública)", es:0, ch:{lau:900, ge:1000}},
     {k:"Luz, agua, internet, móviles", es:200, ch:{lau:230, ge:230}},
     {k:"Supermercado", es:550, ch:{lau:1000, ge:1050}},
@@ -375,6 +383,10 @@ footer.send{display:flex;gap:12px;align-items:center;flex-wrap:wrap;background:v
     $("chL").value = LMODES[st.lmode].ch[st.city];
   });
   seg("who","who");
+  seg("rooms","rooms",()=>{
+    const R=RENT[st.rooms];
+    COSTS[0].k=R.k; costVals[0]={es:R.es, ch:{...R.ch}}; builtCity=null;
+  });
   $("fx").addEventListener("input",()=>{ const v=parseFloat($("fx").value); if(v>0) { st.fx=v; render(); } });
   ["esA","chA","esL","chL"].forEach(id=>$(id).addEventListener("input",()=>{ if(id==="chA") st.chAtouched=true; render(); }));
 
